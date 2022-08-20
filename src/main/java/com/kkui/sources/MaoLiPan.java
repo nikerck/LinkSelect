@@ -2,12 +2,16 @@ package com.kkui.sources;
 
 
 
+import com.kkui.common.JsoupUtil;
+import com.kkui.messageModel.MsgSimple;
+import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import java.io.IOException;
+
+import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,23 +24,35 @@ import java.util.regex.Pattern;
  * @Description 猫狐盘搜索
  */
 public class MaoLiPan  {
+    //单例
     private MaoLiPan(){
-
     }
     private static final MaoLiPan maoLiPan = new MaoLiPan();
+    public static MaoLiPan getMaoLiPan(){
+        return maoLiPan;
+    }
 
     //目标地址
     static final String link = "https://www.alipansou.com";
-
-    //定义两个list 一个存名字 一个存链接
-    private final List<String> name = new ArrayList<>();
-    private final List<String> aliyuLink = new ArrayList<>();
+    //自定义响应类
+    private MsgSimple msgSimple;
+    private final List<MsgSimple> aliyuLink = new ArrayList<>();
     private final List<String> maoLiSou = new ArrayList<>();
 
-    public void find(String k) throws IOException {
+    public void find(String k){
+        aliyuLink.clear();
+        maoLiSou.clear();
 
+        Document document = null;
+        Document document1 = null;
+        // 获取文档对象
+        try {
+            document = JsoupUtil.getDoc(link + "/search?k=" +  URLEncoder.encode(k,"utf-8"));
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
 
-        Document document = Jsoup.connect(link + "/search?k=" +  URLEncoder.encode(k,"utf-8")).get();
+        assert document != null;
         Element elements = document.getElementById("app");
         assert elements != null;
         Element div = elements.getElementsByTag("div").first();
@@ -47,40 +63,39 @@ public class MaoLiPan  {
             String someLink = element.select("a").attr("href");
             if (someLink.matches("/s/.*")){
                 //共10项
-
                 maoLiSou.add(someLink);
+
             }
         }
 
         //通过猫狸链接获取阿里云链接
         for (String maoLink : maoLiSou){
-            Document document2 = Jsoup.connect(link + maoLink).get();
+
+            document1 = JsoupUtil.getDoc(link + maoLink);
+
+
             //获取名字
-            Elements h3 = document2.getElementsByTag("h3");
-            name.add(h3.text());
+            Elements h3 = document1.getElementsByTag("h3");
 
             //获取目标script
-            Element script = document2.getElementsByTag("script").get(10);
+            Element script = document1.getElementsByTag("script").get(10);
             String str = script.data();
             Pattern pattern = Pattern.compile("https://www.aliyundrive.com.*\"?(?=\\,)");
             Matcher m = pattern.matcher(str);
             if (m.find()){
-                aliyuLink.add(m.group().replace("\\","").replace("\"",""));
-//                System.out.println(m.group().replace("\\","").replace("\"",""));
+                msgSimple = new MsgSimple();
+                msgSimple.setName(h3.text());
+                msgSimple.setLink(m.group().replace("\\","").replace("\"",""));
+                aliyuLink.add(msgSimple);
             }
         }
 
     }
 
-    public static MaoLiPan getMaoLiPan(){
-        return maoLiPan;
-    }
 
-    public List<String> getName(){
-        return name;
-    }
 
-    public List<String> getAliyuLink(){
+    //通过自定义响应类返回
+    public List<MsgSimple> getAliyuLink(){
         return aliyuLink;
     }
 
