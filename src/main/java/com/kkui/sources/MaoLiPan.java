@@ -36,7 +36,7 @@ public class MaoLiPan  {
     //目标地址
     static final String link = "https://www.alipansou.com";
     //自定义响应类
-    private MsgSimple msgSimple;
+    private MsgLink msgSimple = new MsgLink();
     private final List<MsgLink> aliyuLink = new ArrayList<>();
     private final List<String> maoLiSou = new ArrayList<>();
 
@@ -45,14 +45,13 @@ public class MaoLiPan  {
         maoLiSou.clear();
 
         Document document = null;
-        Document document1 = null;
+
         // 获取文档对象
         try {
             document = JsoupUtil.getDoc(link + "/search?k=" +  URLEncoder.encode(k,"utf-8"));
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
-
         assert document != null;
         Element elements = document.getElementById("app");
         assert elements != null;
@@ -60,10 +59,11 @@ public class MaoLiPan  {
         assert div != null;
         Elements item = div.getElementsByTag("van-row");
 
+
         for (Element element : item){
             String someLink = element.select("a").attr("href");
             if (someLink.matches("/s/.*")){
-                //共10项
+                //提取链接 共10项
                 maoLiSou.add(someLink);
             }
         }
@@ -88,14 +88,13 @@ public class MaoLiPan  {
 //                msgSimple.setLink(m.group().replace("\\","").replace("\"",""));
 //                aliyuLink.add(msgSimple);
 //            }
-//        }
+//        }}
 
         for (String maoLink : maoLiSou){
             try {
                 String result = HttpClientUtil.LiMaoSendGet(link + maoLink.replaceFirst("s/","cv/"),link + maoLink);
-                MsgLink msgLink= new MsgLink();
-                msgLink.setLink(result);
-                aliyuLink.add(msgLink);
+                msgSimple.setLink(result);
+                aliyuLink.add(msgSimple);
 
             } catch (Exception e) {
                 throw new RuntimeException(e);

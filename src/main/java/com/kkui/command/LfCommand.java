@@ -6,16 +6,11 @@ import com.kkui.messageModel.MsgSimple;
 import com.kkui.sources.MaoLiPan;
 
 import net.mamoe.mirai.console.command.CommandContext;
-import net.mamoe.mirai.console.command.CommandSender;
 import net.mamoe.mirai.console.command.java.JSimpleCommand;
-import net.mamoe.mirai.event.events.GroupMessageEvent;
-import net.mamoe.mirai.message.data.MessageChain;
-import net.mamoe.mirai.message.data.MessageChainBuilder;
-import net.mamoe.mirai.message.data.QuoteReply;
-import net.mamoe.mirai.message.data.SingleMessage;
+import net.mamoe.mirai.contact.Contact;
+import net.mamoe.mirai.message.MessageReceipt;
+import net.mamoe.mirai.message.data.*;
 
-
-import java.io.IOException;
 import java.util.List;
 
 
@@ -44,19 +39,27 @@ public final class LfCommand extends JSimpleCommand {
 
         MessageChain chain = new MessageChainBuilder()
                 .append(new QuoteReply(commandContext.getOriginalMessage()))
-                .append("设置延迟，防止过量爬虫,等吧")
+                .append("设置延迟，防止过量爬虫，等吧")
                 .build();
-        commandContext.getSender().sendMessage(chain);
+        MessageReceipt<Contact> contactMessageReceipt = commandContext.getSender().sendMessage(chain);
+
 
         MaoLiPan maoLiPan = MaoLiPan.getMaoLiPan();
         maoLiPan.find(name);
         List<MsgLink> aLiYuLink = maoLiPan.getAliyuLink();
-        String msg = null;
+        StringBuilder msg = new StringBuilder();
         for (int i =0 ; i<aLiYuLink.size() ; i++){
-            msg += aLiYuLink.get(i).getLink() +"\n";
+            msg.append(aLiYuLink.get(i).getLink()).append("\n");
         }
-        commandContext.getSender().sendMessage(msg);
 
+        //合并转发消息
+        ForwardMessageBuilder forwardMessageBuilder = new ForwardMessageBuilder(commandContext.getSender().getSubject());
+        forwardMessageBuilder.add(2073144748,"狸猫盘",new PlainText(msg.toString()));
+        ForwardMessage forwardMessage = forwardMessageBuilder.build();
+        commandContext.getSender().sendMessage(forwardMessage);
+
+        //撤回
+        contactMessageReceipt.recall();
     }
 
 
