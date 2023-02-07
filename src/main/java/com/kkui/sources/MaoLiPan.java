@@ -36,7 +36,7 @@ public class MaoLiPan  {
     //目标地址
     static final String link = "https://www.alipansou.com";
     //自定义响应类
-    private MsgLink msgSimple = new MsgLink();
+    private MsgLink msgSimple;
     private final List<MsgLink> aliyuLink = new ArrayList<>();
     private final List<String> maoLiSou = new ArrayList<>();
 
@@ -93,9 +93,9 @@ public class MaoLiPan  {
         for (String maoLink : maoLiSou){
             try {
                 String result = HttpClientUtil.LiMaoSendGet(link + maoLink.replaceFirst("s/","cv/"),link + maoLink);
+                msgSimple = new MsgLink();
                 msgSimple.setLink(result);
                 aliyuLink.add(msgSimple);
-
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }

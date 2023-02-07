@@ -23,9 +23,6 @@ public final class LinkSelect extends JavaPlugin {
     public void onEnable() {
         //注册指令
         CommandManager.INSTANCE.registerCommand(LfCommand.INSTANCE,true);
-
-
-
     }
 
 }
